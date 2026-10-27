@@ -98,36 +98,78 @@ ANTHROPIC_API_KEY=
 
 ## Architecture
 
-┌─────────────────────────────────────────────┐
-│ Field Rep │
-│ calls Bolna number (Hindi) │
-└──────────────────┬──────────────────────────┘
-│
-▼
-┌─────────────────────────────────────────────┐
-│ Bolna Voice Agent │
-│ Conducts conversation, gets visit info │
-└──────────────────┬──────────────────────────┘
-│ POST webhook (transcript)
-▼
-┌─────────────────────────────────────────────┐
-│ Next.js API Route │
-│ /api/webhook → Claude extraction │
-│ Extracts: chemist, area, products, │
-│ outcome, competitor, followup │
-└──────────────────┬──────────────────────────┘
-│
-▼
-┌─────────────────────────────────────────────┐
-│ Supabase │
-│ visits table + realtime subscriptions │
-└──────────────────┬──────────────────────────┘
-│ realtime push
-▼
-┌─────────────────────────────────────────────┐
-│ Manager Dashboard │
-│ Live feed · Intel flags · Ask VaazH │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                        FIELD REP (Mobile)                        │
+│                    📞 Calls Bola Number (Hindi)                  │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    🎙️ BOLA VOICE AGENT                           │
+│              Conducts conversation in Hindi                      │
+│              Collects: Visit details, Chemist info,              │
+│                      Products discussed, Outcome                 │
+│                      Competitor intel, Follow-ups                │
+│                                                                  │
+│              [POST Webhook → Transcript]                         │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │ Webhook (Transcript Payload)
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              ⚡ NEXT.JS API ROUTE — /api/webhook                 │
+│                                                                  │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │              🤖 CLAUDE EXTRACTION ENGINE                 │    │
+│  │                                                          │    │
+│  │  Extracts structured data from raw transcript:           │    │
+│  │  • Chemist Name        • Area / Territory                │    │
+│  │  • Products Discussed  • Visit Outcome                   │    │
+│  │  • Competitor Intel    • Follow-up Actions               │    │
+│  │                                                          │    │
+│  │  Output: Structured JSON                                 │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │ Structured Data (JSON)
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              🗄️ SUPABASE — PostgreSQL + Realtime                 │
+│                                                                  │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
+│  │   visits table  │  │  chemists table │  │  products table │  │
+│  │                 │  │                 │  │                 │  │
+│  │ • id            │  │ • id            │  │ • id            │  │
+│  │ • chemist_id    │  │ • name          │  │ • name          │  │
+│  │ • rep_id        │  │ • area          │  │ • category      │  │
+│  │ • transcript    │  │ • phone         │  │ • competitor    │  │
+│  │ • extracted_json│  │ • metadata      │  │ • intel         │  │
+│  │ • created_at    │  │ • created_at    │  │ • created_at    │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘  │
+│                                                                  │
+│  🔴 Realtime Subscriptions Enabled (WebSocket)                   │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │ Realtime Push (WebSocket)
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              📊 MANAGER DASHBOARD (Next.js Frontend)             │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  🔴 LIVE FEED                                            │   │
+│  │  Real-time visit updates as reps complete calls          │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  🚩 INTEL FLAGS                                          │   │
+│  │  Auto-flagged insights:                                  │   │
+│  │  • Competitor mentions  • Product complaints             │   │
+│  │  • Stock-out alerts     • High-priority follow-ups       │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  💬 ASK VAAZH (AI Assistant)                             │   │
+│  │  Natural language queries over visit data:               │   │
+│  │  "Which chemists mentioned competitor X this week?"      │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
 
 
 ---
